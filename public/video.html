@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <script  src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div id="theater">
+            <input type="file" id="fileUpload" />
+            <video id="video" src="/public/s20-plus.mp4" controls="false"></video>
+            <canvas id="canvas"></canvas>
+            <video id="video2" src="/public/s20.webm" controls="false"></video>
+            <label>
+              <br />Try to play me :)</label>
+            <br />
+        </div>
+        <script>
+            $(function() {
+                
+                var canvas = document.querySelector("canvas");
+                canvas.width  = 1400;
+                canvas.height = 1000;
+                var ctx = canvas.getContext('2d');
+                var video = document.getElementById('video');
+                var rightVideo = document.getElementById('video2');
+                rightVideo.playbackRate = 10;
+
+                
+                video.playbackRate = 0.9;
+                const framesQueue = [];
+
+                video.addEventListener('play', function() {
+                    var $this = this;
+
+                    (function addFrames() {
+
+                        if (!$this.paused && !$this.ended) {
+
+                            ctx.drawImage($this, 0, 0);
+                            setTimeout(addFrames, 10);
+
+                        }
+
+                    })();
+                }, 0);
+                
+                var stream = canvas.captureStream(0);
+                var recordedChunks = [];
+
+                var options = { mimeType: "video/webm; codecs=vp9" };
+                mediaRecorder = new MediaRecorder(stream, options);
+
+                mediaRecorder.ondataavailable = handleDataAvailable;
+                mediaRecorder.start();
+
+                function handleDataAvailable(event) {
+                    console.log("data-available", event);
+                    
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                        
+                        uploadFile();
+                    } else {
+                        console.log('no content in canvas found');
+                    }
+                }
+
+                function download() {
+                    var blob = new Blob(recordedChunks, {
+                        type: "video/webm"
+                    });
+                    
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement("a");
+                    document.body.appendChild(a);
+        
+                    a.href = url;
+                    a.download = "test.webm";
+                    a.click();
+    
+                    window.URL.revokeObjectURL(url);
+                }
+
+                function uploadFile() {
+                    var blob = new Blob(recordedChunks, {
+                        type: "video/webm"
+                    });
+
+                    const file = new File([blob], "output.webm");
+                    const formData = new FormData()
+                    formData.append('myFile', file);
+
+                    fetch('/file', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                    })
+                    .catch(error => {
+                        console.error(error)
+                    })
+                }
+
+                
+                setTimeout(event => {
+                    console.log("stopping");
+                    mediaRecorder.stop();
+                }, 7000);
+            });
+        </script>
+    </body>
+</html>
