@@ -35,14 +35,14 @@
                         if (!$this.paused && !$this.ended) {
 
                             ctx.drawImage($this, 0, 0);
-                            setTimeout(addFrames, 10);
+                            setTimeout(addFrames, 1);
 
                         }
 
                     })();
                 }, 0);
                 
-                var stream = canvas.captureStream(0);
+                var stream = canvas.captureStream(500);
                 var recordedChunks = [];
 
                 var options = { mimeType: "video/webm; codecs=vp9" };
@@ -105,7 +105,7 @@
                 setTimeout(event => {
                     console.log("stopping");
                     mediaRecorder.stop();
-                }, 7000);
+                }, 30000);
             });
         </script>
     </body>

@@ -20,7 +20,7 @@ const fs = require('fs');
         busboy.on('finish', function() {
             console.log('Done parsing form!');
             res.writeHead(303, { Connection: 'close', Location: '/' });
-            res.send({});
+            res.end();
         });
         
         req.pipe(busboy);
